@@ -21,7 +21,7 @@ SerialLine::SerialLine(const SerialConnectionParams &connection, IMessage *notif
 void SerialLine::slot_readyRead()
 {
     auto all = port_.readAll();
-    notify_->notify(all.data(), all.size());
+    notify_->notify(reinterpret_cast<const uint8_t*>(all.data()), all.size());
 }
 
 void SerialLine::slot_error(QSerialPort::SerialPortError error)

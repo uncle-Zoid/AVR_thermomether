@@ -1,6 +1,8 @@
 #ifndef IMESSAGE_H
 #define IMESSAGE_H
 
+using byte_t = unsigned char;
+
 class IMessage
 {
 public:
@@ -11,7 +13,7 @@ public:
     * @param data
     * @param size
     */
-    virtual void notify (const char *data, int size) = 0;
+    virtual void notify (const byte_t *data, int size) = 0;
 };
 
 #endif // IMESSAGE_H

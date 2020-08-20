@@ -17,13 +17,13 @@ byte_t RingBuffer::at(byte_t pos)
     return buffer_[index];
 }
 
-bool RingBuffer::push(const char *data, int size)
+bool RingBuffer::push(const byte_t *data, int size)
 {
     if (free() < size)
     {
         return false;
     }
-    const char *pdata = data;
+    const byte_t *pdata = data;
     while (size)
     {
         buffer_[tail_] = *pdata++;
@@ -33,13 +33,13 @@ bool RingBuffer::push(const char *data, int size)
     return true;
 }
 
-bool RingBuffer::pop(char *data, int size)
+bool RingBuffer::pop(byte_t *data, int size)
 {
     if (count() < size)
     {
         return false;
     }
-    char *pdata = data;
+    byte_t *pdata = data;
     while (size && !empty())
     {
         *pdata++ = buffer_[head_];

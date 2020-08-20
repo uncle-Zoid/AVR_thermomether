@@ -8,6 +8,8 @@
 #include "serialline.h"
 #include "ringbuffer.h"
 
+class Controler;
+
 enum class Commands{
       SEND_POWER_MODE = 1
     , SEND_ROM
@@ -19,7 +21,7 @@ enum class Commands{
 };
 
 
-
+using message_t = std::vector<byte_t>;
 
 class Message : public IMessage
 {
@@ -31,7 +33,7 @@ public:
     static constexpr byte_t OFFSET_DATA    = 3;
 
 public:
-    Message(const SerialConnectionParams &params);
+    Message(const SerialConnectionParams &params, Controler *controler);
     virtual ~Message() = default;
 
     Message( const Message &c ) = delete;
@@ -39,13 +41,13 @@ public:
 
 
     template <class T>
-    void send(T data, Commands command)
+    void send(Commands command, T data)
     {
         byte_t *pdataBegin = reinterpret_cast<byte_t*>(&data);
-        send(pdataBegin, sizeof (T), command);
+        send(command, pdataBegin, sizeof (T));
     }
 
-    void send(byte_t *data, byte_t size, Commands command);
+    void send(Commands command, byte_t *data = nullptr, byte_t size = 0);
     void send(const Packet &pck);
 
     void receive(Packet &p);
@@ -53,15 +55,16 @@ public:
 private:
     SerialLine serial_;
     RingBuffer ringBuffer_;
+    Controler *controler_;
 
     char bufferOut_[BUFFER_MAX];
 
     static const char *findHead(const char *pdata, const char *pend);
-    void process(const QByteArray &message);
+    void process(const message_t &message);
 
     // IMessage interface
 public:
-    void notify(const char *data, int size) override;
+    void notify(const byte_t *data, int size) override;
 }; //Communicator
 
 #endif // MESSAGE_H
