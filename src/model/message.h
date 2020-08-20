@@ -7,6 +7,7 @@
 #include "imessage.h"
 #include "serialline.h"
 #include "ringbuffer.h"
+#include "DalasCrc.h"
 
 class Controler;
 
@@ -25,6 +26,24 @@ using message_t = std::vector<byte_t>;
 
 class Message : public IMessage
 {
+    enum eScratchpad {
+            TEMPERATURE_LSB = 0, // spodni byte teploty
+            TEMPERATURE_MSB,	 // horni byte teploty
+            ThRegister,			 // horni hodnota alarmu
+            TlRegister,			 // dolni hodnota alarmu
+            ConfigRegister,		 // rozliseni senzoru
+            Reserved1,			 // rezervovano (obsahuje hodnotu 0xff)
+            Reserved2,			 // rezervovano
+            Reserved3,			 // rezervovano (obsahuje hodnotu 0x10)
+            Crc					 // crc
+            };
+
+    enum Resolution {
+            RESOLUTION_12B = 0x7F,
+            RESOLUTION_11B = 0x5F,
+            RESOLUTION_10B = 0x3F,
+            RESOLUTION_09B = 0x1F
+            };
 public:
     static constexpr byte_t BUFFER_MAX = 32;
     static constexpr byte_t HEAD = 0x1A;
@@ -55,12 +74,14 @@ public:
 private:
     SerialLine serial_;
     RingBuffer ringBuffer_;
+    DalasCrc dalasCrc_;
     Controler *controler_;
 
     char bufferOut_[BUFFER_MAX];
 
     static const char *findHead(const char *pdata, const char *pend);
     void process(const message_t &message);
+    byte_t toResolution(byte_t configRegister);
 
     // IMessage interface
 public:

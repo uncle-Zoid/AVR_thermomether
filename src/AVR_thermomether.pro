@@ -17,6 +17,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     main.cpp \
+    model/DalasCrc.cpp \
     model/controler.cpp \
     model/message.cpp \
     model/ringbuffer.cpp \
@@ -24,6 +25,7 @@ SOURCES += \
     view\mainwindow.cpp
 
 HEADERS += \
+    model/DalasCrc.h \
     model/controler.h \
     model/imessage.h \
     model/message.h \

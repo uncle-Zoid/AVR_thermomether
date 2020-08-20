@@ -28,6 +28,27 @@ void Message::process(const message_t &message)
         controler_->powerMode_ = message[OFFSET_DATA];
         break;
 
+    case Commands::SEND_ROM:
+        std::copy(message.begin() + OFFSET_DATA, message.end(), controler_->sensorRom_);
+        break;
+
+    case Commands::SEND_SCRATCHPAD:
+    {
+        auto &ref = controler_->sensorScratchpad_;
+
+        const byte_t *databegin = message.data() + OFFSET_DATA;
+        const byte_t *dataend   = message.data() + OFFSET_DATA + 9;
+
+        std::copy(databegin, dataend, ref.raw);
+
+        ref.Th = databegin[ThRegister];
+        ref.Tl = databegin[TlRegister];
+        ref.temperature = ((databegin[TEMPERATURE_MSB] << 8) | databegin[TEMPERATURE_LSB]);
+        ref.resolution = toResolution(databegin[ConfigRegister]);
+
+        ref.crc = dalasCrc_.compute8(databegin, 9);
+        break;
+    }
     case Commands::SEND_TEMPERATURE:
     {
         int t = ((message[OFFSET_DATA] << 8) | message[OFFSET_DATA + 1]);
@@ -42,6 +63,18 @@ void Message::process(const message_t &message)
     }
 
     controler_->notify(Commands(message[OFFSET_COMMAND]));
+}
+
+byte_t Message::toResolution(byte_t configRegister)
+{
+    switch (configRegister)
+    {
+    case RESOLUTION_12B: return 12;
+    case RESOLUTION_11B: return 11;
+    case RESOLUTION_10B: return 10;
+    case RESOLUTION_09B: return 9;
+    }
+    return 0;
 }
 
 void Message::notify(const byte_t *data, int size)
