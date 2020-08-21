@@ -21,8 +21,9 @@ class SerialLine : public QObject
 public:
     SerialLine(const SerialConnectionParams &connection, IMessage *notify);
     void send(const char *data, int size);
-
     bool open(const SerialConnectionParams &connection);
+    bool isOpen () const;
+
 private slots:
     void slot_readyRead();
     void slot_error(QSerialPort::SerialPortError error);

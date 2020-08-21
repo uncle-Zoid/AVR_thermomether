@@ -38,12 +38,15 @@ Controler::Controler(const SerialConnectionParams &params)
 
 void Controler::notify(Commands command)
 {
+    auto ts = QDateTime::currentMSecsSinceEpoch();
+
     switch (command)
     {
     case Commands::SEND_TEMPERATURE:
+        temperatures_.push_back({sensorScratchpad_.temperature, ts});
         printf("%s: Temperature is %.02f"
-               , qPrintable(QDateTime::fromMSecsSinceEpoch(temperatures_.back().timestamp).toString("hh:mm:ss"))
-               , temperatures_.back().temperature
+               , qPrintable(QDateTime::fromMSecsSinceEpoch(ts).toString("hh:mm:ss"))
+               , sensorScratchpad_.temperature
                );
         cout << " °C" << endl;
         break;
@@ -68,13 +71,37 @@ void Controler::notify(Commands command)
         std::cout << "\tResolution : "  << +sensorScratchpad_.resolution << "b" << std::endl;
         std::cout << "\tCRC        : "  << +sensorScratchpad_.crc << std::endl;
 
-
+        temperatures_.push_back({sensorScratchpad_.temperature, ts});
         break;
+
+    default:;
     }
+
+    if(temperatures_.size() > 1e4)
+    {
+        temperatures_.pop_front();
+    }
+
+    emit sig_mcuUpdate(command);
 }
 
 void Controler::readInfo()
 {
     messageProceser_.send(Commands::SEND_POWER_MODE);
     messageProceser_.send(Commands::SEND_ROM);
+}
+
+const std::list<TemperatureEntry> &Controler::temperatures() const
+{
+    return temperatures_;
+}
+
+const char *Controler::powerMode() const
+{
+    return POWER_MODE[powerMode_];
+}
+
+bool Controler::serialStatus() const
+{
+    return messageProceser_.serialStatus();
 }

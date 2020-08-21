@@ -23,8 +23,9 @@ struct Scratchpad
 
 
 
-class Controler
+class Controler : public QObject
 {
+    Q_OBJECT
     static constexpr const char *POWER_MODE[] =
     {
         "No sensor"
@@ -38,14 +39,25 @@ public:
     void notify(Commands command);
     void readInfo();
 
+    const std::list<TemperatureEntry> &temperatures() const;
+    const char *powerMode() const;
+    bool serialStatus() const;
+
+signals:
+    void sig_mcuUpdate(const Commands&);
+
+
 private:
     Message messageProceser_;
     std::list <TemperatureEntry> temperatures_;
+    Scratchpad sensorScratchpad_;
+    uint16_t measurePeriod_;
     byte_t powerMode_;
     byte_t sensorRom_[8];
-    Scratchpad sensorScratchpad_;
+
 
     friend class Message;
+    friend class MainWindow;
 };
 
 #endif // CONTROLER_H

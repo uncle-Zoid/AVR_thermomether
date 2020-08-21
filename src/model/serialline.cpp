@@ -34,6 +34,11 @@ bool SerialLine::open(const SerialConnectionParams &connection)
     return open();
 }
 
+bool SerialLine::isOpen() const
+{
+    return open_;
+}
+
 void SerialLine::slot_readyRead()
 {
     auto all = port_.readAll();

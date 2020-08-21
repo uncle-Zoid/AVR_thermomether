@@ -25,6 +25,7 @@ SOURCES += \
     view\mainwindow.cpp
 
 HEADERS += \
+    ansicolors.h \
     model/DalasCrc.h \
     model/controler.h \
     model/imessage.h \

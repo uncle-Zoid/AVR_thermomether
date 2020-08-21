@@ -21,7 +21,6 @@ const char* Message::findHead(const char *pdata, const char *pend)
 
 void Message::process(const message_t &message)
 {
-    auto ts = QDateTime::currentMSecsSinceEpoch();
     switch (Commands(message[OFFSET_COMMAND]))
     {
     case Commands::SEND_POWER_MODE:
@@ -47,19 +46,24 @@ void Message::process(const message_t &message)
         ref.resolution = toResolution(databegin[ConfigRegister]);
 
         ref.crc = dalasCrc_.compute8(databegin, 9);
+
         break;
     }
     case Commands::SEND_TEMPERATURE:
     {
         int t = ((message[OFFSET_DATA] << 8) | message[OFFSET_DATA + 1]);
-        controler_->temperatures_.push_back({t / 100.0, ts});
+        controler_->sensorScratchpad_.temperature = t / 100.0;
         break;
     }
+
+    case Commands::SET_MEASURE_PERIOD:
+        controler_->measurePeriod_ = uint16_t((message[OFFSET_DATA] << 8) | message[OFFSET_DATA + 1]);
+        break;
+
     default:
         std::cout << qPrintable(QTime::currentTime().toString("hh:mm:ss")) << " " << std::hex;
         std::copy(message.begin(), message.end(), std::ostream_iterator<int>(std::cout, " "));
         std::cout << std::endl;
-
     }
 
     controler_->notify(Commands(message[OFFSET_COMMAND]));
@@ -147,4 +151,9 @@ void Message::send(Commands command, byte_t *data, byte_t size)
         std::copy(data, data + size, bufferOut_ + 3);
     }
     serial_.send(bufferOut_, bufferOut_[1]);
+}
+
+bool Message::serialStatus() const
+{
+    return serial_.isOpen();
 }

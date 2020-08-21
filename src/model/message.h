@@ -70,6 +70,7 @@ public:
     void send(const Packet &pck);
 
     void receive(Packet &p);
+    bool serialStatus() const;
 
 private:
     SerialLine serial_;
