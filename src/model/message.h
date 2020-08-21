@@ -82,6 +82,7 @@ private:
     static const char *findHead(const char *pdata, const char *pend);
     void process(const message_t &message);
     byte_t toResolution(byte_t configRegister);
+    double temperature(byte_t *scratchpad);
 
     // IMessage interface
 public:

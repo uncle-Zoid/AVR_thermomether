@@ -43,7 +43,7 @@ void Message::process(const message_t &message)
 
         ref.Th = databegin[ThRegister];
         ref.Tl = databegin[TlRegister];
-        ref.temperature = ((databegin[TEMPERATURE_MSB] << 8) | databegin[TEMPERATURE_LSB]);
+        ref.temperature = temperature(ref.raw);
         ref.resolution = toResolution(databegin[ConfigRegister]);
 
         ref.crc = dalasCrc_.compute8(databegin, 9);
@@ -76,6 +76,43 @@ byte_t Message::toResolution(byte_t configRegister)
     }
     return 0;
 }
+
+double Message::temperature(byte_t *scratchpad)
+{
+
+    int sign = 1; // kladne znamenko
+    int t = (scratchpad[TEMPERATURE_MSB] << 8) | scratchpad[TEMPERATURE_LSB];
+    // je teplota zaporna?
+    if (t & 0x8000)
+    {
+        t = (t ^ 0xFFFF) + 1; // dvojkovy doplnek
+        sign = -1;
+    }
+
+    switch (scratchpad[ConfigRegister])
+    {
+        // vsechny bity platne ... rozliseni 0,0625
+        case RESOLUTION_12B:
+            return sign * double(t) * 0.0625;
+
+        // bit 0 neni platny ... rozliseni 0,125
+        case RESOLUTION_11B:
+            t >>= 1;
+            return sign * double(t) * 0.125;
+
+        // bity 0 a 1 nejsou platne ... rozliseni 0,25
+        case RESOLUTION_10B:
+            t >>= 2;
+            return sign * double(t) * 0.25;
+
+        // bity 0, 1 a 2 nejsou platne ... rozliseni 0,5
+        case RESOLUTION_09B:
+            t >>= 3;
+            return sign * double(t) * 0.5;
+    }
+    return 0;
+}
+
 
 void Message::notify(const byte_t *data, int size)
 {

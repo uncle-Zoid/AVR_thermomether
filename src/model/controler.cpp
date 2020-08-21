@@ -12,13 +12,18 @@ Controler::Controler(const SerialConnectionParams &params)
     : messageProceser_(params, this)
     , powerMode_      (0)
 {
-    QTimer::singleShot(11000, [&]()
+    static QTimer t;
+    QObject::connect(&t, &QTimer::timeout, [&](){messageProceser_.send(Commands::SEND_SCRATCHPAD); t.setInterval(1000);});
+//    t.start(10000);
+
+    QTimer::singleShot(10, [&]()
     {
-        messageProceser_.send(Commands::SEND_SCRATCHPAD);
+//        messageProceser_.send(Commands::SEND_TEMPERATURE);
+//        messageProceser_.send(Commands::SEND_SCRATCHPAD);
 //        uint16_t time = 0x0FFF;
 //        messageProceser_.send(Commands::SET_MEASURE_PERIOD, (byte_t*)&time, 2);
 
-        readInfo();
+//        readInfo();
     });
     //QTimer::singleShot(2000, [&]()
     //{
@@ -57,7 +62,7 @@ void Controler::notify(Commands command)
         cout << "Sensor scratchpad is: " << hex;
         std::copy(sensorScratchpad_.raw, sensorScratchpad_.raw + 9, std::ostream_iterator<int>(std::cout, " "));
         std::cout << std::endl << dec;
-        std::cout << "\tTemperature: "  << (sensorScratchpad_.temperature / 100.0) << std::endl;
+        std::cout << "\tTemperature: "  << sensorScratchpad_.temperature << " °C" << std::endl;
         std::cout << "\tAlarm hight: "  << +sensorScratchpad_.Th << std::endl;
         std::cout << "\tAlarm low  : "  << +sensorScratchpad_.Tl << std::endl;
         std::cout << "\tResolution : "  << +sensorScratchpad_.resolution << "b" << std::endl;

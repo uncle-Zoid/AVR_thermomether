@@ -4,18 +4,34 @@
 #include "imessage.h"
 
 SerialLine::SerialLine(const SerialConnectionParams &connection, IMessage *notify)
-    : notify_ (notify)
+    : connection_   (connection)
+    , notify_       (notify)
 {
-    port_.setPortName(connection.com);
-    port_.setBaudRate(connection.baudrate);
+
+    QObject::connect(&port_, &QSerialPort::readyRead, this, &SerialLine::slot_readyRead);
+    QObject::connect(&port_, &QSerialPort::errorOccurred, this, &SerialLine::slot_error);
+
+    QObject::connect(&timer_, &QTimer::timeout, this, &SerialLine::slot_connect);
+
+    open();
+}
+
+bool SerialLine::open()
+{
     port_.setDataBits(QSerialPort::Data8);
     port_.setStopBits(QSerialPort::OneStop);
     port_.setParity(QSerialPort::NoParity);
     port_.setFlowControl(QSerialPort::NoFlowControl);
+    port_.setPortName(connection_.com);
+    port_.setBaudRate(connection_.baudrate);
     open_ = port_.open(QIODevice::ReadWrite);
 
-    QObject::connect(&port_, &QSerialPort::readyRead, this, &SerialLine::slot_readyRead);
-    QObject::connect(&port_, &QSerialPort::errorOccurred, this, &SerialLine::slot_error);
+    return open_;
+}
+bool SerialLine::open(const SerialConnectionParams &connection)
+{
+    connection_ = connection;
+    return open();
 }
 
 void SerialLine::slot_readyRead()
@@ -26,8 +42,31 @@ void SerialLine::slot_readyRead()
 
 void SerialLine::slot_error(QSerialPort::SerialPortError error)
 {
-    qDebug() << error;
-    // toho auto reconect a sig_con failed
+    if (error != QSerialPort::NoError)
+    {
+        open_ = false;
+        if (port_.isOpen())
+        {
+            port_.close();
+        }
+        if (!timer_.isActive())
+        {
+            timer_.start();
+        }
+        qDebug() << "Serial error: " << error;
+    }
+}
+
+void SerialLine::slot_connect()
+{
+    if (timer_.interval() < 1000)
+    {
+        timer_.setInterval(1000);
+    }
+    if (open())
+    {
+        timer_.stop();
+    }
 }
 
 void SerialLine::send(const char *data, int size)

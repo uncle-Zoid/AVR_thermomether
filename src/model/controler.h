@@ -14,7 +14,7 @@ struct TemperatureEntry
 struct Scratchpad
 {
     byte_t raw[9];
-    uint16_t temperature;
+    double temperature;
     byte_t Th;
     byte_t Tl;
     byte_t resolution;
@@ -32,13 +32,8 @@ class Controler
         ,"External supply"
     };
 
-    static constexpr const char *MODE[] =
-    {
-
-    };
-
 public:
-    Controler(const SerialConnectionParams &params);
+    explicit Controler(const SerialConnectionParams &params);
 
     void notify(Commands command);
     void readInfo();
