@@ -34,7 +34,7 @@ class Controler : public QObject
     };
 
 public:
-    explicit Controler(const SerialConnectionParams &params);
+    explicit Controler();
 
     void notify(Commands command);
     void readInfo();
@@ -42,9 +42,12 @@ public:
     const std::list<TemperatureEntry> &temperatures() const;
     const char *powerMode() const;
     bool serialStatus() const;
+    void setPeriod(uint16_t period);
+    bool connect(const SerialConnectionParams &params);
 
 signals:
     void sig_mcuUpdate(const Commands&);
+    void sig_connectionStatus(bool);
 
 
 private:
@@ -54,7 +57,9 @@ private:
     uint16_t measurePeriod_;
     byte_t powerMode_;
     byte_t sensorRom_[8];
+    bool connected_;
 
+    void setConnectionStatus(bool connected);
 
     friend class Message;
     friend class MainWindow;

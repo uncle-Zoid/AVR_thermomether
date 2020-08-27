@@ -3,17 +3,14 @@
 #include <QDebug>
 #include "imessage.h"
 
-SerialLine::SerialLine(const SerialConnectionParams &connection, IMessage *notify)
-    : connection_   (connection)
-    , notify_       (notify)
+SerialLine::SerialLine(IMessage *notify)
+    : notify_       (notify)
 {
 
     QObject::connect(&port_, &QSerialPort::readyRead, this, &SerialLine::slot_readyRead);
     QObject::connect(&port_, &QSerialPort::errorOccurred, this, &SerialLine::slot_error);
 
     QObject::connect(&timer_, &QTimer::timeout, this, &SerialLine::slot_connect);
-
-    open();
 }
 
 bool SerialLine::open()
@@ -26,9 +23,10 @@ bool SerialLine::open()
     port_.setBaudRate(connection_.baudrate);
     open_ = port_.open(QIODevice::ReadWrite);
 
+    notify_->connectionStatus(open_);
     return open_;
 }
-bool SerialLine::open(const SerialConnectionParams &connection)
+bool SerialLine::connect(const SerialConnectionParams &connection)
 {
     connection_ = connection;
     return open();
@@ -60,6 +58,7 @@ void SerialLine::slot_error(QSerialPort::SerialPortError error)
         }
         qDebug() << "Serial error: " << error;
     }
+    notify_->connectionStatus(open_);
 }
 
 void SerialLine::slot_connect()

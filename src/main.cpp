@@ -24,9 +24,8 @@ int main(int argc, char *argv[])
     QCoreApplication::setApplicationVersion(QString("%1 - %2").arg(APP_VERSION).arg(APP_DATE));
 
 
-    QApplication a(argc, argv);
-    SerialConnectionParams params = {"COM3", 9600};
-    Controler c(params);
+    QApplication a(argc, argv);   
+    Controler c;
 
     MainWindow w(c);
     w.show();

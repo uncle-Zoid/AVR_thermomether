@@ -19,6 +19,7 @@ enum class Commands{
     , SET_AUTOMATIC_MEASURE
     , SET_SENSOR_PARAMS
     , SET_MEASURE_PERIOD
+    , DEVICE_READY
 };
 
 
@@ -52,7 +53,7 @@ public:
     static constexpr byte_t OFFSET_DATA    = 3;
 
 public:
-    Message(const SerialConnectionParams &params, Controler *controler);
+    Message(Controler *controler);
     virtual ~Message() = default;
 
     Message( const Message &c ) = delete;
@@ -62,7 +63,14 @@ public:
     template <class T>
     void send(Commands command, T data)
     {
-        byte_t *pdataBegin = reinterpret_cast<byte_t*>(&data);
+        byte_t* pdata = reinterpret_cast<byte_t*>(&data);
+        T bigeData = 0x00;
+        for (byte_t* it = pdata; it != pdata + sizeof (T); ++it)
+        {
+            bigeData >>= 8;
+            bigeData |= *it << (sizeof (T) - 8);
+        }
+        byte_t *pdataBegin = reinterpret_cast<byte_t*>(&bigeData);
         send(command, pdataBegin, sizeof (T));
     }
 
@@ -71,6 +79,7 @@ public:
 
     void receive(Packet &p);
     bool serialStatus() const;
+    bool connect(const SerialConnectionParams &params);
 
 private:
     SerialLine serial_;
@@ -88,6 +97,7 @@ private:
     // IMessage interface
 public:
     void notify(const byte_t *data, int size) override;
+    void connectionStatus(bool connected) override;
 }; //Communicator
 
 #endif // MESSAGE_H

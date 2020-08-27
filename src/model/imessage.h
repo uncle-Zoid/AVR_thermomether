@@ -14,6 +14,8 @@ public:
     * @param size
     */
     virtual void notify (const byte_t *data, int size) = 0;
+
+    virtual void connectionStatus(bool connected) = 0;
 };
 
 #endif // IMESSAGE_H

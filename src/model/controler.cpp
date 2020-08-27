@@ -8,13 +8,17 @@ using namespace std;
 
 constexpr const char *Controler::POWER_MODE[];
 
-Controler::Controler(const SerialConnectionParams &params)
-    : messageProceser_(params, this)
+Controler::Controler()
+    : messageProceser_(this)
     , powerMode_      (0)
 {
     static QTimer t;
-    QObject::connect(&t, &QTimer::timeout, [&](){messageProceser_.send(Commands::SEND_SCRATCHPAD); t.setInterval(1000);});
-//    t.start(10000);
+    QObject::connect(&t, &QTimer::timeout, [&]()
+    {
+        messageProceser_.send(Commands::SEND_POWER_MODE);
+        t.setInterval(1000);
+    });
+    t.start();
 
     QTimer::singleShot(10, [&]()
     {
@@ -74,6 +78,9 @@ void Controler::notify(Commands command)
         temperatures_.push_back({sensorScratchpad_.temperature, ts});
         break;
 
+    case Commands::SET_MEASURE_PERIOD:
+        cout << "set measure period: " << measurePeriod_ << endl;
+        break;
     default:;
     }
 
@@ -83,6 +90,17 @@ void Controler::notify(Commands command)
     }
 
     emit sig_mcuUpdate(command);
+}
+
+void Controler::setPeriod(uint16_t period)
+{
+    messageProceser_.send(Commands::SET_MEASURE_PERIOD, period);
+}
+
+void Controler::setConnectionStatus(bool connected)
+{
+    connected_ = connected;
+    emit sig_connectionStatus(connected_);
 }
 
 void Controler::readInfo()
@@ -104,4 +122,9 @@ const char *Controler::powerMode() const
 bool Controler::serialStatus() const
 {
     return messageProceser_.serialStatus();
+}
+
+bool Controler::connect(const SerialConnectionParams &params)
+{
+    return messageProceser_.connect(params);
 }

@@ -19,9 +19,9 @@ class SerialLine : public QObject
     Q_OBJECT
 
 public:
-    SerialLine(const SerialConnectionParams &connection, IMessage *notify);
+    SerialLine(IMessage *notify);
     void send(const char *data, int size);
-    bool open(const SerialConnectionParams &connection);
+    bool connect(const SerialConnectionParams &connection);
     bool isOpen () const;
 
 private slots:

@@ -8,10 +8,15 @@
 
 #include "controler.h"
 
-Message::Message(const SerialConnectionParams &params, Controler *controler)
-    : serial_    (params, this)
+Message::Message(Controler *controler)
+    : serial_    (this)
     , controler_ (controler)
 { }
+
+bool Message::connect(const SerialConnectionParams &params)
+{
+    return serial_.connect(params);
+}
 
 const char* Message::findHead(const char *pdata, const char *pend)
 {
@@ -138,6 +143,11 @@ void Message::notify(const byte_t *data, int size)
 
         process(message);
     }
+}
+
+void Message::connectionStatus(bool connected)
+{
+    controler_->setConnectionStatus(connected);
 }
 
 void Message::send(Commands command, byte_t *data, byte_t size)
